@@ -2,9 +2,10 @@ services:
   # --- BANCO DE DADOS ---
   db:
     build:
-      context: .     
-      dockerfile: Dockerfile  # Nome do arquivo dentro da pasta backend
+      context: .
+      dockerfile: Dockerfile
     container_name: mysql_db
+    restart: always  # Added: Auto-start on reboot
     environment:
       MYSQL_ROOT_PASSWORD: pass
       MYSQL_DATABASE: ecommerce
@@ -19,9 +20,10 @@ services:
   # --- API .NET ---
   api:
     build:
-      context: .       
+      context: .
       dockerfile: Dockerfile.api 
     container_name: dotnet_api
+    restart: always  # Added: Auto-start on reboot
     depends_on:
       db:
         condition: service_healthy
@@ -29,5 +31,5 @@ services:
       - "8080:8080"
     environment:
       - ConnectionStrings__DefaultConnection=Server=db;Database=ecommerce;Uid=root;Pwd=pass;
-
- 
+      - ASPNETCORE_ENVIRONMENT=Development  # Added: Forces Swagger to show
+      - ASPNETCORE_URLS=http://+:8080       # Added: Forces App to listen on port 8080

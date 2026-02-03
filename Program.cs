@@ -57,13 +57,13 @@ builder.Services.AddAuthorization(); // Required for [Authorize]
 // ADICIONE ISSO:
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("PermitirFrontend",
-        policy =>
-        {
-            policy.WithOrigins("http://localhost:3000") // A porta do Flutter no docker-compose
-                  .AllowAnyHeader()
-                  .AllowAnyMethod();
-        });
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy
+            .AllowAnyOrigin()
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
 });
 
 builder.Services.AddControllers();
@@ -93,15 +93,15 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
-// app.UseCors("AllowAll");
-app.UseCors("PermitirFrontend");
+app.UseCors("AllowAll");
+// app.UseCors("PermitirFrontend");
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection();
 
 // --- 3. ENABLE MIDDLEWARE (ORDER MATTERS) ---
 app.UseAuthentication(); // Must be before Authorization
