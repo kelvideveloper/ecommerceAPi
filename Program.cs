@@ -19,19 +19,21 @@ builder.Services.AddAuthentication(options =>
 .AddJwtBearer(options =>
 {
     options.RequireHttpsMetadata = false;
-   options.TokenValidationParameters = new TokenValidationParameters
+  options.TokenValidationParameters = new TokenValidationParameters
 {
     ValidateIssuer = true,
     ValidateAudience = true,
     ValidateLifetime = true,
     ValidateIssuerSigningKey = true,
-
     ValidIssuer = jwtSettings["Issuer"],
     ValidAudience = jwtSettings["Audience"],
     IssuerSigningKey = new SymmetricSecurityKey(key),
 
-    RoleClaimType = "http://schemas.microsoft.com/ws/2008/06/identity/claims/role",
-    NameClaimType = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"
+    // CHANGE THESE TWO LINES:
+    // Use "role" because your AuthController uses ["role"] = user.Role
+    RoleClaimType = "role", 
+    // Use "sub" or "email" because DefaultInboundClaimTypeMap.Clear() was called
+    NameClaimType = "sub" 
 };
     // --- ADICIONE ISTO PARA VER O ERRO REAL ---
     options.Events = new JwtBearerEvents
@@ -52,9 +54,16 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddAuthorization(); // Required for [Authorize]
 // --------------------------------
 
+// ADICIONE ISSO:
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", policy => { policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader(); });
+    options.AddPolicy("PermitirFrontend",
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:3000") // A porta do Flutter no docker-compose
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        });
 });
 
 builder.Services.AddControllers();
@@ -84,8 +93,8 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
-app.UseCors("AllowAll");
-
+// app.UseCors("AllowAll");
+app.UseCors("PermitirFrontend");
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
